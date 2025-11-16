@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # Container Python para executar os benchmarks contra servidores externos
+  benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firebird-benchmark
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+      - ./firebird_benchmark_results.csv:/app/firebird_benchmark_results.csv
+    network_mode: host
+    stdin_open: true
+    tty: true
+    command: >
+      sh -c "
+        echo 'Firebird Benchmark Client' &&
+        echo '=========================' &&
+        echo '' &&
+        echo 'Servidores configurados:' &&
+        echo 'Server 1: ${WIN_FB_HOST}:${WIN_FB_PORT}' &&
+        echo 'Server 2: ${LIN_FB_HOST}:${LIN_FB_PORT}' &&
+        echo '' &&
+        echo 'Executando benchmarks...' &&
+        echo '' &&
+        uv run python -m compare_firebird_diferent_os.benchmark
+      "

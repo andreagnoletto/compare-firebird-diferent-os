@@ -1,15 +1,68 @@
-# Environments
+# ============================================
+# CONFIGURAÇÕES SENSÍVEIS - NÃO COMMITAR
+# ============================================
 .env
+*.env
+!.env.example
+!.env.docker
+
+# ============================================
+# PYTHON
+# ============================================
+# Environments
 .venv/
 .uv/
+venv/
+ENV/
+env/
 
 # Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
 
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ============================================
+# RESULTADOS E LOGS
+# ============================================
 # Benchmark results
 firebird_benchmark_results.csv
+*.csv
+!.gitkeep
 
-# IDE
+# Logs
+*.log
+logs/
+
+# ============================================
+# IDE E EDITORES
+# ============================================
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ============================================
+# DOCKER
+# ============================================
+# Não ignorar docker files, mas logs sim
+docker-compose.override.yml
+*.log
+
+# ============================================
+# TEMPORÁRIOS
+# ============================================
+*.tmp
+*.bak
+*.backup
+temp/
+tmp/
