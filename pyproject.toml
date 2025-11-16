@@ -1,0 +1,10 @@
+[project]
+name = "compare-firebird-diferent-os"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fdb>=2.0.4",
+    "python-dotenv>=1.2.1",
+]
