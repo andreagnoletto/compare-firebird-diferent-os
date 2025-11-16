@@ -39,11 +39,9 @@ Make sure `uv` is available in your shell (you may need to reload it).
 ### 2. Clone the repository
 
 ```bash
-git clone https://github.com/your-user/compare-firebird-different-os.git
+git clone https://github.com/andreagnoletto/compare-firebird-different-os.git
 cd compare-firebird-different-os
 ```
-
-> Replace `your-user` with your GitHub username or hosting of choice.
 
 ### 3. Install dependencies
 
