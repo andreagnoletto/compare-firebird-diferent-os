@@ -1,11 +1,13 @@
 [project]
 name = "compare-firebird-diferent-os"
 version = "0.1.0"
-description = "Add your description here"
+description = "Scientifically rigorous benchmark toolkit for comparing Firebird database performance across different operating systems"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fdb>=2.0.4",
     "pandas>=2.3.3",
     "python-dotenv>=1.2.1",
+    "scipy>=1.14.1",
+    "numpy>=2.1.3",
 ]

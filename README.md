@@ -1,17 +1,62 @@
 # compare-firebird-different-os
 
-A small Python toolkit to compare the performance of two Firebird database servers running on **different operating systems** (e.g., Windows vs Linux).  
-It focuses on measuring:
+A **scientifically rigorous** Python toolkit to compare the performance of two Firebird database servers running on **different operating systems** (e.g., Windows vs Linux).  
 
+## 🔬 Metodologia Científica
+
+Este projeto implementa análise estatística rigorosa seguindo práticas científicas estabelecidas:
+
+### Métricas Capturadas
 - **Total execution time** (client → server → client, includes network latency)
-- **Server-side execution time** (internal Firebird processing)
+- **Server-side execution time** (internal Firebird processing) 
 - **Network latency** (calculated difference between total and server time)
 - **Firebird I/O statistics** (sequential reads, indexed reads, inserts, updates, deletes)
 - **Query execution plan** analysis
-- Connection time
-- Repeated query benchmarks
-- CSV export with detailed metrics
-- Comprehensive statistics per server (mean, median, min, max, std deviation)
+
+### Análise Estatística Implementada
+
+1. **Testes de Normalidade** (Shapiro-Wilk, 1965)
+   - Verifica se os dados seguem distribuição normal
+   - Determina qual teste estatístico apropriado usar
+
+2. **Testes de Significância Estatística**
+   - **t-test** (Student, 1908) para dados normais
+   - **Mann-Whitney U** (1947) para dados não-normais
+   - Nível de significância: α = 0.05
+
+3. **Tamanho do Efeito** (Cohen's d, 1988)
+   - Quantifica a magnitude prática da diferença
+   - Interpretação: insignificante, pequeno, médio ou grande
+
+4. **Intervalos de Confiança** (95%)
+   - Usando distribuição t de Student
+   - Mostra range de valores esperados para a média
+
+5. **Detecção de Outliers** (Tukey, 1977)
+   - Método IQR (Interquartile Range)
+   - Identifica valores anômalos
+
+### Interpretação dos Resultados
+
+O sistema diferencia:
+- **Significância Estatística**: A diferença é real ou pode ser acaso? (p-valor)
+- **Relevância Prática**: A diferença importa na prática? (Cohen's d)
+
+**Exemplo de conclusão científica:**
+> "Linux apresentou performance 15.2% superior (p < 0.001, Cohen's d = 1.23).
+> A diferença é estatisticamente significativa e apresenta efeito grande,
+> indicando vantagem substancial e consistente em ambiente de produção."
+
+### Referências Bibliográficas
+- Shapiro, S.S. & Wilk, M.B. (1965). *An analysis of variance test for normality*
+- Student (1908). *The probable error of a mean*
+- Mann, H.B. & Whitney, D.R. (1947). *On a test of whether one of two random variables is stochastically larger than the other*
+- Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2nd ed.)
+- Tukey, J.W. (1977). *Exploratory Data Analysis*
+
+---
+
+## 📊 Características Técnicas
 
 This is useful when you are:
 - Migrating Firebird from Windows to Linux (or vice versa)
@@ -65,6 +110,9 @@ uv run python -m compare_firebird_diferent_os.benchmark
 - **uv** – fast Python environment & dependency manager
 - **fdb** – Firebird driver for Python
 - **python-dotenv** – environment variable loader
+- **pandas** – data analysis and statistics
+- **scipy** – scientific computing and statistical tests
+- **numpy** – numerical computing
 - **Docker** – containerização (opcional, mas recomendado)
 - Firebird 2.5 / 3.0 / 4.0 (any version supported by `fdb`)
 
@@ -404,8 +452,8 @@ Para análise estatística detalhada dos resultados:
 
 **Com uv (recomendado):**
 ```bash
-# Instalar pandas no ambiente uv
-uv pip install pandas
+# Instalar pandas, scipy e numpy no ambiente uv
+uv pip install pandas scipy numpy
 
 # Executar análise
 uv run python analyze_results.py
@@ -413,8 +461,8 @@ uv run python analyze_results.py
 
 **Com pip:**
 ```bash
-# Instalar pandas
-pip install pandas
+# Instalar dependências
+pip install pandas scipy numpy
 
 # Executar análise
 python analyze_results.py
@@ -422,62 +470,110 @@ python analyze_results.py
 
 **O que o script faz:**
 - Lê o arquivo `firebird_benchmark_results.csv`
-- Calcula estatísticas detalhadas:
+- Calcula estatísticas descritivas detalhadas:
   - **Tempo Total**: Média, mediana, mínimo, máximo, desvio padrão
+  - **Intervalo de Confiança 95%** para as médias
+  - **Coeficiente de Variação**: Mede estabilidade dos resultados
   - **Tempo do Servidor**: Performance interna do Firebird
   - **Latência de Rede**: Overhead de comunicação
   - Estatísticas de I/O (leituras sequenciais/indexadas)
+- **Testes de Normalidade** (Shapiro-Wilk)
+  - Determina se os dados seguem distribuição normal
+- **Detecção de Outliers** (Método de Tukey)
+  - Identifica medições anômalas
+- **Testes de Significância Estatística**
+  - t-test ou Mann-Whitney U dependendo da normalidade
+  - Reporta p-valor e conclusão
+- **Tamanho do Efeito** (Cohen's d)
+  - Quantifica magnitude prática da diferença
 - Compara performance entre servidores
-- Mostra diferença percentual para cada métrica
-- Identifica qual servidor é mais rápido
 - **Diferencia** se a vantagem está no processamento do banco ou na rede
+- Fornece **interpretação científica** dos resultados
 - Sugere visualizações com matplotlib
 
 **Exemplo de saída:**
 ```
-📊 ANÁLISE DE RESULTADOS DO BENCHMARK FIREBIRD
-================================================
+📊 ANÁLISE ESTATÍSTICA DE RESULTADOS - BENCHMARK FIREBIRD
+Metodologia Científica com Testes de Significância
+==================================================================
 
 ✅ Dados de latência disponíveis
 ✅ Tempo interno do servidor disponível
 ✅ Estatísticas de I/O disponíveis
 
+📊 ESTATÍSTICAS DESCRITIVAS POR SERVIDOR
+==================================================================
+
 🖥️  Windows
    Tempo Total (com rede):
       Média:        0.045123 s
-      Tempo Servidor (processamento interno):
+      IC 95%:       [0.043891, 0.046355] s
+      Mediana:      0.044567 s
+      Desvio Padrão: 0.001234 s
+      Coef. Variação: 2.74%
+      Outliers:     1 detectados (Tukey, 1977)
+      Normalidade:  Normal (Shapiro-Wilk p=0.2341)
+   Tempo Servidor (processamento interno):
       Média:        0.042891 s
-   Latência de Rede:
-      Média:        0.002232 s
+      IC 95%:       [0.041789, 0.043993] s
+      Normalidade:  Normal (p=0.1856)
 
 🖥️  Linux
    Tempo Total (com rede):
       Média:        0.038567 s
+      IC 95%:       [0.037234, 0.039900] s
+      Normalidade:  Normal (p=0.3421)
    Tempo Servidor (processamento interno):
       Média:        0.036234 s
-   Latência de Rede:
-      Média:        0.002333 s
+      IC 95%:       [0.035123, 0.037345] s
 
-⚖️  COMPARAÇÃO DIRETA
+⚖️  COMPARAÇÃO ESTATÍSTICA ENTRE SERVIDORES
+==================================================================
 
 📊 TEMPO TOTAL (com rede e latência):
    🏆 Mais rápido: Linux - 0.038567 s
    🐌 Mais lento:  Windows - 0.045123 s
    📊 Diferença:   0.006556 s (14.52%)
+   📈 Teste:       t-test (Student, 1908)
+   📊 p-valor:     0.000234 (significativo)
+   📏 Cohen's d:   1.2345 (efeito grande)
 
 🔧 TEMPO DO SERVIDOR (processamento interno do Firebird):
    🏆 Mais rápido: Linux - 0.036234 s
    🐌 Mais lento:  Windows - 0.042891 s
    📊 Diferença:   0.006657 s (15.52%)
+   📈 Teste:       t-test (Student, 1908)
+   📊 p-valor:     0.000156 (significativo α=0.05)
+   📏 Cohen's d:   1.3456 (efeito grande)
 
-🌐 LATÊNCIA DE REDE:
-   🏆 Menor latência: Windows - 0.002232 s
-   📡 Maior latência: Linux - 0.002333 s
-   📊 Diferença:      0.000101 s
+🔬 INTERPRETAÇÃO CIENTÍFICA DOS RESULTADOS
+==================================================================
 
-🔍 INTERPRETAÇÃO:
-   🔴 Diferença significativa! Linux processa 15.52% mais rápido
-   🔴 Linux oferece experiência 14.52% mais rápida
+📊 Significância Estatística (α = 0.05):
+   ✅ A diferença no tempo de processamento do servidor é
+      ESTATISTICAMENTE SIGNIFICATIVA (p = 0.000156)
+   ✅ Podemos rejeitar a hipótese nula (H0: μ₁ = μ₂)
+   ✅ Conclusão: Linux é REALMENTE mais rápido que Windows
+
+📏 Tamanho do Efeito (Cohen's d = 1.3456):
+   → Efeito GRANDE (Cohen, 1988)
+   → Diferença muito substancial, altamente relevante
+
+🎯 Recomendação:
+   ✅ A diferença é tanto estatisticamente significativa quanto
+      praticamente relevante. Linux apresenta performance
+      superior com 15.5% de vantagem.
+   ✅ Recomenda-se Linux para ambientes de produção.
+
+📚 REFERÊNCIAS METODOLÓGICAS:
+   • Shapiro, S.S. & Wilk, M.B. (1965). An analysis of variance
+     test for normality (complete samples)
+   • Student (1908). The probable error of a mean
+   • Mann, H.B. & Whitney, D.R. (1947). On a test of whether
+     one of two random variables is stochastically larger
+   • Cohen, J. (1988). Statistical power analysis for the
+     behavioral sciences (2nd ed.)
+   • Tukey, J.W. (1977). Exploratory Data Analysis
 ```
 
 ---
