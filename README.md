@@ -3,16 +3,22 @@
 A small Python toolkit to compare the performance of two Firebird database servers running on **different operating systems** (e.g., Windows vs Linux).  
 It focuses on measuring:
 
+- **Total execution time** (client → server → client, includes network latency)
+- **Server-side execution time** (internal Firebird processing)
+- **Network latency** (calculated difference between total and server time)
+- **Firebird I/O statistics** (sequential reads, indexed reads, inserts, updates, deletes)
+- **Query execution plan** analysis
 - Connection time
-- Simple query execution time
 - Repeated query benchmarks
-- CSV export of raw timings
-- Basic statistics per server (mean, min, max)
+- CSV export with detailed metrics
+- Comprehensive statistics per server (mean, median, min, max, std deviation)
 
 This is useful when you are:
 - Migrating Firebird from Windows to Linux (or vice versa)
 - Tuning Firebird configuration and OS settings
 - Measuring network latency impact on Firebird access
+- **Comparing actual database processing performance** vs network overhead
+- Analyzing whether performance differences are due to the database or network
 
 > 📖 **Guia rápido?** Veja [QUICKSTART.md](QUICKSTART.md) para referência rápida  
 > 🔧 **Problemas?** Veja [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
@@ -365,16 +371,26 @@ firebird_benchmark_results.csv
 
 Colunas:
 ```text
-server;run_index;elapsed_seconds;query;runs
+server;run_index;elapsed_total_seconds;elapsed_server_seconds;latency_seconds;seq_reads;idx_reads;inserts;updates;deletes;plan;rowcount;query;runs
 ```
+
+**Métricas capturadas:**
+- **elapsed_total_seconds**: Tempo total end-to-end (cliente → servidor → cliente)
+- **elapsed_server_seconds**: Tempo de processamento no servidor Firebird
+- **latency_seconds**: Latência de rede calculada (total - servidor)
+- **seq_reads**: Leituras sequenciais (table scans)
+- **idx_reads**: Leituras usando índices
+- **inserts/updates/deletes**: Operações de modificação
+- **plan**: Plano de execução da query
+- **rowcount**: Número de linhas afetadas/retornadas
 
 Exemplo:
 ```csv
-server;run_index;elapsed_seconds;query;runs
-Windows;1;0.045123;SELECT CURRENT_TIMESTAMP FROM RDB$DATABASE;20
-Windows;2;0.043891;SELECT CURRENT_TIMESTAMP FROM RDB$DATABASE;20
-Linux;1;0.038567;SELECT CURRENT_TIMESTAMP FROM RDB$DATABASE;20
-Linux;2;0.039123;SELECT CURRENT_TIMESTAMP FROM RDB$DATABASE;20
+server;run_index;elapsed_total_seconds;elapsed_server_seconds;latency_seconds;seq_reads;idx_reads;...
+Windows;1;0.045123;0.042891;0.002232;0;5;0;0;0;PLAN (TABLE NATURAL);1;SELECT...;20
+Windows;2;0.043891;0.041567;0.002324;0;5;0;0;0;PLAN (TABLE NATURAL);1;SELECT...;20
+Linux;1;0.038567;0.036234;0.002333;0;5;0;0;0;PLAN (TABLE NATURAL);1;SELECT...;20
+Linux;2;0.039123;0.036891;0.002232;0;5;0;0;0;PLAN (TABLE NATURAL);1;SELECT...;20
 ...
 ```
 
@@ -407,12 +423,14 @@ python analyze_results.py
 **O que o script faz:**
 - Lê o arquivo `firebird_benchmark_results.csv`
 - Calcula estatísticas detalhadas:
-  - Média, mediana, mínimo, máximo
-  - Desvio padrão e variância
-  - Percentis
+  - **Tempo Total**: Média, mediana, mínimo, máximo, desvio padrão
+  - **Tempo do Servidor**: Performance interna do Firebird
+  - **Latência de Rede**: Overhead de comunicação
+  - Estatísticas de I/O (leituras sequenciais/indexadas)
 - Compara performance entre servidores
-- Mostra diferença percentual
+- Mostra diferença percentual para cada métrica
 - Identifica qual servidor é mais rápido
+- **Diferencia** se a vantagem está no processamento do banco ou na rede
 - Sugere visualizações com matplotlib
 
 **Exemplo de saída:**
@@ -420,21 +438,46 @@ python analyze_results.py
 📊 ANÁLISE DE RESULTADOS DO BENCHMARK FIREBIRD
 ================================================
 
+✅ Dados de latência disponíveis
+✅ Tempo interno do servidor disponível
+✅ Estatísticas de I/O disponíveis
+
 🖥️  Windows
-   Média:        0.045123 s
-   Mediana:      0.044567 s
-   Mínimo:       0.042891 s
-   Máximo:       0.048234 s
+   Tempo Total (com rede):
+      Média:        0.045123 s
+      Tempo Servidor (processamento interno):
+      Média:        0.042891 s
+   Latência de Rede:
+      Média:        0.002232 s
 
 🖥️  Linux
-   Média:        0.038567 s
-   Mediana:      0.038234 s
-   Mínimo:       0.036891 s
-   Máximo:       0.041123 s
+   Tempo Total (com rede):
+      Média:        0.038567 s
+   Tempo Servidor (processamento interno):
+      Média:        0.036234 s
+   Latência de Rede:
+      Média:        0.002333 s
 
 ⚖️  COMPARAÇÃO DIRETA
-🏆 Servidor mais rápido: Linux
-📊 Diferença percentual: 14.52%
+
+📊 TEMPO TOTAL (com rede e latência):
+   🏆 Mais rápido: Linux - 0.038567 s
+   🐌 Mais lento:  Windows - 0.045123 s
+   📊 Diferença:   0.006556 s (14.52%)
+
+🔧 TEMPO DO SERVIDOR (processamento interno do Firebird):
+   🏆 Mais rápido: Linux - 0.036234 s
+   🐌 Mais lento:  Windows - 0.042891 s
+   📊 Diferença:   0.006657 s (15.52%)
+
+🌐 LATÊNCIA DE REDE:
+   🏆 Menor latência: Windows - 0.002232 s
+   📡 Maior latência: Linux - 0.002333 s
+   📊 Diferença:      0.000101 s
+
+🔍 INTERPRETAÇÃO:
+   🔴 Diferença significativa! Linux processa 15.52% mais rápido
+   🔴 Linux oferece experiência 14.52% mais rápida
 ```
 
 ---
@@ -625,6 +668,42 @@ compare-firebird-different-os/
 
 Para obter resultados significativos:
 
+### Entendendo as Métricas
+
+O benchmark agora captura **três tipos de tempo**:
+
+1. **Tempo Total (`elapsed_total_seconds`)**: Tempo completo da operação
+   - Inclui: processamento do servidor + latência de rede + overhead do driver
+   - É o que o usuário final percebe
+
+2. **Tempo do Servidor (`elapsed_server_seconds`)**: Processamento interno do Firebird
+   - **Esta é a métrica mais importante** para comparar performance do banco
+   - Elimina variações de rede
+   - Mostra a real diferença de desempenho entre Windows e Linux
+
+3. **Latência (`latency_seconds`)**: Overhead de rede e comunicação
+   - Calculado como: Total - Servidor
+   - Deve ser similar para ambos os servidores se testados da mesma localização
+
+**Interpretação dos resultados:**
+
+```
+Cenário 1: Diferença está no servidor
+Windows: total=0.100s, servidor=0.095s, latência=0.005s
+Linux:   total=0.060s, servidor=0.055s, latência=0.005s
+→ Linux é 42% mais rápido no PROCESSAMENTO do banco
+
+Cenário 2: Diferença está na rede
+Windows: total=0.100s, servidor=0.050s, latência=0.050s
+Linux:   total=0.060s, servidor=0.050s, latência=0.010s
+→ Bancos têm performance igual, Linux tem rede melhor
+
+Cenário 3: Diferença mista
+Windows: total=0.100s, servidor=0.080s, latência=0.020s
+Linux:   total=0.060s, servidor=0.050s, latência=0.010s
+→ Linux é mais rápido tanto no banco quanto na rede
+```
+
 ### Configuração de Rede
 - Coloque os servidores Windows e Linux na **mesma rede física**, se possível
 - Minimize latência de rede entre cliente e servidores
@@ -754,6 +833,15 @@ Para resultados mais estáveis:
 - Aumente `FB_BENCH_RUNS` (ex: 50 ou 100)
 - Execute fora do horário de pico
 - Use mediana ao invés de média para análise
+- **Foque no tempo do servidor** (`elapsed_server_seconds`) que tem menos variação que o tempo total
+
+### P: Como saber se a diferença está no banco ou na rede?
+**R:** Compare as três métricas:
+- Se `elapsed_server_seconds` é diferente → diferença está no processamento do Firebird
+- Se `latency_seconds` é diferente → diferença está na rede
+- Se ambos são diferentes → diferença mista (banco + rede)
+
+O script `analyze_results.py` faz essa análise automaticamente!
 
 ### P: Como contribuir com o projeto?
 **R:** 
