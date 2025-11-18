@@ -294,11 +294,16 @@ def analyze_results(csv_file: str = "firebird_benchmark_results.csv"):
         print()
         
         # Comparação de tempo do servidor (se disponível)
+        server1_srv = None
+        server2_srv = None
+        has_server_data = False
+        
         if has_server_time:
             server1_srv = pd.to_numeric(server1_df['elapsed_server_seconds'].replace('', pd.NA), errors='coerce').dropna()
             server2_srv = pd.to_numeric(server2_df['elapsed_server_seconds'].replace('', pd.NA), errors='coerce').dropna()
             
             if len(server1_srv) > 0 and len(server2_srv) > 0:
+                has_server_data = True
                 mean1_srv = server1_srv.mean()
                 mean2_srv = server2_srv.mean()
                 
@@ -356,7 +361,7 @@ def analyze_results(csv_file: str = "firebird_benchmark_results.csv"):
         print("=" * 70)
         print()
         
-        if has_server_time and len(server1_srv) > 0 and len(server2_srv) > 0:
+        if has_server_data:
             print(f"📊 Significância Estatística (α = 0.05):")
             if is_sig_srv:
                 print(f"   ✅ A diferença no tempo de processamento do servidor é")
@@ -413,13 +418,13 @@ def analyze_results(csv_file: str = "firebird_benchmark_results.csv"):
         print("     behavioral sciences (2nd ed.)")
         print("   • Tukey, J.W. (1977). Exploratory Data Analysis")
         print()
-                higher_lat = servers[1] if lower_lat == servers[0] else servers[0]
-                
-                print("🌐 LATÊNCIA DE REDE:")
-                print(f"   🏆 Menor latência: {lower_lat} - {min(mean1_lat, mean2_lat):.6f} s")
-                print(f"   📡 Maior latência: {higher_lat} - {max(mean1_lat, mean2_lat):.6f} s")
-                print(f"   📊 Diferença:      {diff_lat:.6f} s")
-                print()
+        higher_lat = servers[1] if lower_lat == servers[0] else servers[0]
+        
+        print("🌐 LATÊNCIA DE REDE:")
+        print(f"   🏆 Menor latência: {lower_lat} - {min(mean1_lat, mean2_lat):.6f} s")
+        print(f"   📡 Maior latência: {higher_lat} - {max(mean1_lat, mean2_lat):.6f} s")
+        print(f"   📊 Diferença:      {diff_lat:.6f} s")
+        print()
         
         # Interpretação
         print("🔍 INTERPRETAÇÃO:")
