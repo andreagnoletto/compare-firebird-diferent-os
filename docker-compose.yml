@@ -1,30 +1,75 @@
 version: '3.8'
 
 services:
-  # Container Python para executar os benchmarks contra servidores externos
+  # ============================================================================
+  # BENCHMARK CLIENT - Container Python para executar benchmarks multi-database
+  # ============================================================================
   benchmark:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: firebird-benchmark
+    container_name: multi-db-benchmark
     env_file:
       - .env
     volumes:
       - ./:/app
-      - ./firebird_benchmark_results.csv:/app/firebird_benchmark_results.csv
+      - ./benchmark_results.csv:/app/benchmark_results.csv
     network_mode: host
     stdin_open: true
     tty: true
     command: >
       sh -c "
-        echo 'Firebird Benchmark Client' &&
-        echo '=========================' &&
+        echo '🚀 Multi-Database Benchmark Client' &&
+        echo '====================================' &&
         echo '' &&
-        echo 'Servidores configurados:' &&
-        echo 'Server 1: ${WIN_FB_HOST}:${WIN_FB_PORT}' &&
-        echo 'Server 2: ${LIN_FB_HOST}:${LIN_FB_PORT}' &&
+        uv run python test_connections.py &&
         echo '' &&
         echo 'Executando benchmarks...' &&
         echo '' &&
-        uv run python -m compare_firebird_diferent_os.benchmark
+        uv run python -m compare_firebird_diferent_os.main_new
       "
+
+  # ============================================================================
+  # SERVIÇOS DE TESTE OPCIONAIS (descomente para usar)
+  # ============================================================================
+  
+  # MySQL Test Server
+  # mysql-test:
+  #   image: mysql:8.0
+  #   container_name: mysql-test
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: test_password
+  #     MYSQL_DATABASE: clinica
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  
+  # PostgreSQL Test Server
+  # postgres-test:
+  #   image: postgres:16
+  #   container_name: postgres-test
+  #   environment:
+  #     POSTGRES_PASSWORD: test_password
+  #     POSTGRES_DB: clinica
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  
+  # MariaDB Test Server
+  # mariadb-test:
+  #   image: mariadb:11
+  #   container_name: mariadb-test
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: test_password
+  #     MYSQL_DATABASE: clinica
+  #   ports:
+  #     - "3307:3306"
+  #   volumes:
+  #     - mariadb-data:/var/lib/mysql
+
+# volumes:
+#   mysql-data:
+#   postgres-data:
+#   mariadb-data:
